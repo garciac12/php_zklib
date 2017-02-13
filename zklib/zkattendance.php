@@ -4,7 +4,7 @@
         indicating that data packets are to be sent
 
         Returns the amount of bytes that are going to be sent*/
-        $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6/H2h7/H2h8', substr( $self->data_recv, 0, 8 ) ); 
+        $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6/H2h7/H2h8', substr( $self->data_recv, 0, 8) );
         $command = hexdec( $u['h2'].$u['h1'] );
         
         if ( $command == CMD_PREPARE_DATA ) {
@@ -33,7 +33,7 @@
         $command_string = '';
         $chksum = 0;
         $session_id = $self->session_id;
-        
+
         $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6/H2h7/H2h8', substr( $self->data_recv, 0, 8) );
         $reply_id = hexdec( $u['h8'].$u['h7'] );
 
@@ -106,7 +106,7 @@
         $command_string = '';
         $chksum = 0;
         $session_id = $self->session_id;
-        
+
         $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6/H2h7/H2h8', substr( $self->data_recv, 0, 8) );
         $reply_id = hexdec( $u['h8'].$u['h7'] );
 
