@@ -384,7 +384,7 @@ class ZkSocket
     {
         try {
             $data = null;
-            $attendance_data = null;
+            $attendance_data = [];
             $this->execute(ZKConst::CMD_ATTLOG_RRQ,  '');
 
             $size = $this->getSizeAttendance();
