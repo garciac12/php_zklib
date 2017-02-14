@@ -375,11 +375,88 @@ class ZkSocket
 
         copied from zkemsdk.c - EncodeTime*/
         $timestamp = ( ($dateTime->format('Y') % 100) * 12 * 31 + (($dateTime->format('m') - 1) * 31) + $dateTime->format('d') - 1) *
-            (24 * 60 * 60) + ($dateTime->format('H') * 60 + $dateTime->format('i')) * 60 + $dateTime->format('s')
+            (24 * 60 * 60) + ($dateTime->format('H') * 60 + $dateTime->format('i')) * 60 + $dateTime->format('s');
 
         return $this->execute(ZKConst::CMD_SET_TIME,  pack('I', $timestamp));
     }
 
-    public
+    public function getAttendance()
+    {
+        try {
+            $data = null;
+            $attendance_data = null;
+            $this->execute(ZKConst::CMD_ATTLOG_RRQ,  '');
+
+            $size = $this->getSizeAttendance();
+            if($size) {
+                while ( $size > 0 ) {
+                    @socket_recvfrom($this->socket, $data, 1032, 0, $this->ip, $this->port);
+                    array_push( $attendance_data, $data);
+                    $size -= 1024;
+                }
+                @socket_recvfrom($this->socket, $data, 1024, 0, $this->ip, $this->port);
+            }
+
+
+            $attendance = [];
+            if ( count($attendance_data) > 0 ) {
+                # The first 4 bytes don't seem to be related to the user
+                for ( $x=0; $x<count($attendance_data); $x++) {
+                    if ( $x > 0 )
+                        $attendance_data[$x] = substr( $attendance_data[$x], 8 );
+                }
+
+                $attendancedata = implode( '', $attendance_data );
+                $attendancedata = substr( $attendancedata, 10 );
+
+                while ( strlen($attendancedata) > 40 ) {
+
+                    $u = unpack( 'H78', substr( $attendancedata, 0, 39 ) );
+                    //24s1s4s11s
+                    //print_r($u);
+
+                    //$uid = hexdec( substr( $u[1], 0, 6 ) );
+                    //$uid = explode(chr(0), $uid);
+                    //$uid = intval( $uid[0] );
+                    $u1 = hexdec( substr($u[1], 4, 2) );
+                    $u2 = hexdec( substr($u[1], 6, 2) );
+                    $uid = $u1+($u2*256);
+                    $id = intval( str_replace("\0", '', hex2bin( substr($u[1], 6, 8) ) ) );
+                    $state = hexdec( substr( $u[1], 56, 2 ) );
+                    $timestamp = decode_time( hexdec( reverseHex( substr($u[1], 58, 8) ) ) );
+
+                    # Clean up some messy characters from the user name
+                    #uid = unicode(uid.strip('\x00|\x01\x10x'), errors='ignore')
+                    #uid = uid.split('\x00', 1)[0]
+                    #print "%s, %s, %s" % (uid, state, decode_time( int( reverseHex( timestamp.encode('hex') ), 16 ) ) )
+
+                    array_push( $attendance, array( $uid, $id, $state, $timestamp ) );
+
+                    $attendancedata = substr( $attendancedata, 40 );
+                }
+
+            }
+            return $attendance;
+        } catch (\Exception $ex) {
+            var_dump($ex->getMessage());
+        }
+    }
+
+    private function getSizeAttendance()
+    {
+    /* Checks a returned packet to see if it returned CMD_PREPARE_DATA,
+     * indicating that data packets are to be sent
+     * Returns the amount of bytes that are going to be sent
+     **/
+        $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6/H2h7/H2h8', substr( $this->data, 0, 8) );
+        $command = hexdec( $u['h2'].$u['h1'] );
+
+        if ( $command == CMD_PREPARE_DATA ) {
+            $u = unpack('H2h1/H2h2/H2h3/H2h4', substr( $this->data, 8, 4 ) );
+            $size = hexdec($u['h4'].$u['h3'].$u['h2'].$u['h1']);
+            return $size;
+        } else
+            return false;
+    }
 
 }
