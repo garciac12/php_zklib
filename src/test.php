@@ -8,5 +8,7 @@
 include 'ZKConst.php';
 include 'ZkSocket.php';
 $o = new ZkSocket('192.168.100.89');
+$o->connect();
 var_dump( $o->getDeviceName() );
 var_dump( $o->getAttendance() );
+$o->disconnect();
