@@ -350,6 +350,17 @@ class ZkSocket
         return $this->decode_time($t);
     }
 
+    private function reverseHex($hexstr) {
+        $tmp = '';
+
+        for ( $i=strlen($hexstr); $i>=0; $i-- ) {
+            $tmp .= substr($hexstr, $i, 2);
+            $i--;
+        }
+
+        return $tmp;
+    }
+
     private function decode_time($t) {
         /*Decode a timestamp retrieved from the timeclock
 
@@ -430,7 +441,7 @@ class ZkSocket
                     $uid = $u1+($u2*256);
                     $id = intval( str_replace("\0", '', hex2bin( substr($u[1], 6, 8) ) ) );
                     $state = hexdec( substr( $u[1], 56, 2 ) );
-                    $timestamp = $this->decode_time( hexdec( reverseHex( substr($u[1], 58, 8) ) ) );
+                    $timestamp = $this->decode_time( hexdec( $this->reverseHex( substr($u[1], 58, 8) ) ) );
 
                     # Clean up some messy characters from the user name
                     #uid = unicode(uid.strip('\x00|\x01\x10x'), errors='ignore')
