@@ -268,7 +268,7 @@ class ZkSocket
             }
 
         } catch (\Exception $ex) {
-            print_r($ex->getMessage());
+            var_dump($ex->getMessage());
         }
 
         return false;
@@ -346,6 +346,11 @@ class ZkSocket
         }
 
         $t = hexdec( $tmp );
+
+        return $this->decode_time($t);
+    }
+
+    private function decode_time($t) {
         /*Decode a timestamp retrieved from the timeclock
 
         copied from zkemsdk.c - DecodeTime*/
@@ -366,7 +371,9 @@ class ZkSocket
 
         $year = floor( $t + 2000 );
 
-        return date("Y-m-d H:i:s", strtotime( $year.'-'.$month.'-'.$day.' '.$hour.':'.$minute.':'.$second) );
+        $d = date("Y-m-d H:i:s", strtotime( $year.'-'.$month.'-'.$day.' '.$hour.':'.$minute.':'.$second) );
+
+        return $d;
     }
 
     public function setTime(\DateTime $dateTime)
@@ -423,7 +430,7 @@ class ZkSocket
                     $uid = $u1+($u2*256);
                     $id = intval( str_replace("\0", '', hex2bin( substr($u[1], 6, 8) ) ) );
                     $state = hexdec( substr( $u[1], 56, 2 ) );
-                    $timestamp = decode_time( hexdec( reverseHex( substr($u[1], 58, 8) ) ) );
+                    $timestamp = $this->decode_time( hexdec( reverseHex( substr($u[1], 58, 8) ) ) );
 
                     # Clean up some messy characters from the user name
                     #uid = unicode(uid.strip('\x00|\x01\x10x'), errors='ignore')
