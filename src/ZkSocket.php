@@ -206,7 +206,7 @@ class ZkSocket
         $u = unpack('H2h1/H2h2', substr($reply, 0, 8) );
 
         $command = hexdec( $u['h2'].$u['h1'] );
-        if ($command == CMD_ACK_OK)
+        if ($command == ZKConst::CMD_ACK_OK)
             return TRUE;
         else
             return FALSE;
@@ -451,7 +451,7 @@ class ZkSocket
         $u = unpack('H2h1/H2h2/H2h3/H2h4/H2h5/H2h6/H2h7/H2h8', substr( $this->data, 0, 8) );
         $command = hexdec( $u['h2'].$u['h1'] );
 
-        if ( $command == CMD_PREPARE_DATA ) {
+        if ( $command == ZKConst::CMD_PREPARE_DATA ) {
             $u = unpack('H2h1/H2h2/H2h3/H2h4', substr( $this->data, 8, 4 ) );
             $size = hexdec($u['h4'].$u['h3'].$u['h2'].$u['h1']);
             return $size;
