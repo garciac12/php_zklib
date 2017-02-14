@@ -148,8 +148,8 @@ class ZkSocket
 
         $this->reply_id += 1;
 
-        if ($this->reply_id >= USHRT_MAX) {
-            $this->reply_id -= USHRT_MAX;
+        if ($this->reply_id >= ZKConst::USHRT_MAX) {
+            $this->reply_id -= ZKConst::USHRT_MAX;
         }
 
         $buf = pack('SSSS', $command, $chksum, $this->session_id, $this->reply_id);
