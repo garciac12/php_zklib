@@ -431,22 +431,12 @@ class ZkSocket
 
                     $u = unpack( 'H78', substr( $attendancedata, 0, 39 ) );
                     //24s1s4s11s
-                    //print_r($u);
-
-                    //$uid = hexdec( substr( $u[1], 0, 6 ) );
-                    //$uid = explode(chr(0), $uid);
-                    //$uid = intval( $uid[0] );
                     $u1 = hexdec( substr($u[1], 4, 2) );
                     $u2 = hexdec( substr($u[1], 6, 2) );
                     $uid = $u1+($u2*256);
-                    $id = intval( str_replace("\0", '', hex2bin( substr($u[1], 6, 8) ) ) );
+                    $id = intval( str_replace("\0", '', hex2bin( substr($u[1], 6, 22) ) ) );
                     $state = hexdec( substr( $u[1], 56, 2 ) );
                     $timestamp = $this->decode_time( hexdec( $this->reverseHex( substr($u[1], 58, 8) ) ) );
-
-                    # Clean up some messy characters from the user name
-                    #uid = unicode(uid.strip('\x00|\x01\x10x'), errors='ignore')
-                    #uid = uid.split('\x00', 1)[0]
-                    #print "%s, %s, %s" % (uid, state, decode_time( int( reverseHex( timestamp.encode('hex') ), 16 ) ) )
 
                     array_push( $attendance, array( $uid, $id, $state, $timestamp ) );
 
@@ -456,7 +446,7 @@ class ZkSocket
             }
             return $attendance;
         } catch (\Exception $ex) {
-            var_dump($ex->getMessage());
+            error_log($ex->getMessage());
         }
     }
 
@@ -477,4 +467,26 @@ class ZkSocket
             return false;
     }
 
+    public function getFreeSize()
+    {
+        $fs = [];
+        $free_sizes_info = $this->reverseHex(bin2hex($this->execute(ZKConst::CMD_GET_FREE_SIZES,  '')));
+        if (!$free_sizes_info) {
+            $fs = false;
+        } else {
+            if (ZKConst::DEVICE_GENERAL_INFO_STRING_LENGTH > strlen($free_sizes_info)) {
+                $free_sizes_info = '000000000000000000000000' . $free_sizes_info;
+            }
+            $fs['att_logs_available']  = hexdec(substr($free_sizes_info, 27, 5));
+            $fs['templates_available'] = hexdec(substr($free_sizes_info, 44, 4));
+            $fs['att_logs_capacity']   = hexdec(substr($free_sizes_info, 51, 5));
+            $fs['templates_capacity']  = hexdec(substr($free_sizes_info, 60, 4));
+            $fs['passwords_stored']    = hexdec(substr($free_sizes_info, 76, 4));
+            $fs['admins_stored']       = hexdec(substr($free_sizes_info, 84, 4));
+            $fs['att_logs_stored']     = hexdec(substr($free_sizes_info, 116, 4));
+            $fs['templates_stored']    = hexdec(substr($free_sizes_info, 132, 4));
+            $fs['users_stored']        = hexdec(substr($free_sizes_info, 148, 4));
+        }
+        return $fs;
+    }
 }

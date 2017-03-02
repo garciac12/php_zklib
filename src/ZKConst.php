@@ -30,6 +30,8 @@ class ZKConst
     const CMD_GET_TIME = 201;
     const CMD_SET_TIME = 202;
     const CMD_VERSION = 1100;
+    const CMD_GET_FREE_SIZES = 50;
     const LEVEL_USER = 0;
     const LEVEL_ADMIN = 14;
+    const DEVICE_GENERAL_INFO_STRING_LENGTH = 184;
 }
